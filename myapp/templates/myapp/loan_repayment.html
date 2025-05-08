@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Repayment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Loan Repayment</h1>
+        <p>Click the button below to repay your loan.</p>
+        
+        <button id="repayButton">Repay Loan</button>
+        
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('repayButton').addEventListener('click', function() {
+            // Show loading state
+            this.disabled = true;
+            this.textContent = 'Processing...';
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = '';
+            resultDiv.style.display = 'none';
+            
+            // Send request to the backend
+            fetch('/repay-loan/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.disabled = false;
+                this.textContent = 'Repay Loan';
+                
+                resultDiv.style.display = 'block';
+                
+                if (data.error) {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = 'Error: ' + data.error;
+                } else {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = 'Success! Transaction hash: ' + data.tx_hash;
+                }
+            })
+            .catch(error => {
+                this.disabled = false;
+                this.textContent = 'Repay Loan';
+                
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            });
+        });
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
